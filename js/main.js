@@ -76,49 +76,59 @@ document.addEventListener('DOMContentLoaded', function () {
     const videoGallery = document.getElementById('video-gallery');
     const filterButtons = document.querySelectorAll('.filter-btn');
 
-    // Your actual video portfolio with featured layout
-    const videoData = [
-        {
-            id: 1,
-            title: "Cologne Ad",
-            description: "Professional commercial music composition for advertising",
-            category: "cinematic",
-            videoSrc: "showcase_videos/Cologne Ad.mp4",
-            featured: true
-        },
-        {
-            id: 2,
-            title: "Fear Rain - Studio Ghibli Theme",
-            description: "Cinematic orchestral theme with Studio Ghibli inspiration",
-            category: "cinematic",
-            videoSrc: "showcase_videos/fear-rain-studio-ghibli.mp4",
-            featured: false
-        },
-        {
-            id: 3,
-            title: "Heartbreak",
-            description: "Emotional dramatic composition",
-            category: "dramatic",
-            videoSrc: "showcase_videos/heartbreak.mp4",
-            featured: false
-        },
-        {
-            id: 4,
-            title: "Intrigue",
-            description: "Suspenseful composition",
-            category: "dramatic",
-            videoSrc: "showcase_videos/intrigue.mp4",
-            featured: false
-        },
-        {
-            id: 5,
-            title: "Slowly Aching",
-            description: "Ambient emotional piece",
-            category: "ambient",
-            videoSrc: "showcase_videos/slowly aching.mp4",
-            featured: false
-        }
-    ];
+    // Google Drive Configuration
+    const GOOGLE_DRIVE_CONFIG = {
+        // Your Google Drive folder ID (extracted from the shared link)
+        folderId: '1w2Uao5tH7pOM_mQkFHaMRjM-xqfz3WSI',
+        apiKey: 'YOUR_GOOGLE_API_KEY', // Get from Google Cloud Console (steps provided below)
+
+        // Manual fallback video data (will be used until API key is configured)
+        fallbackVideos: [
+            {
+                id: 1,
+                title: "Cologne Ad",
+                description: "Professional commercial music composition for advertising",
+                category: "cinematic",
+                driveId: "GOOGLE_DRIVE_FILE_ID", // Replace with actual Google Drive file ID
+                featured: true
+            },
+            {
+                id: 2,
+                title: "Fear Rain - Studio Ghibli Theme",
+                description: "Cinematic orchestral theme with Studio Ghibli inspiration",
+                category: "cinematic",
+                driveId: "GOOGLE_DRIVE_FILE_ID",
+                featured: false
+            },
+            {
+                id: 3,
+                title: "Heartbreak",
+                description: "Emotional dramatic composition",
+                category: "dramatic",
+                driveId: "GOOGLE_DRIVE_FILE_ID",
+                featured: false
+            },
+            {
+                id: 4,
+                title: "Intrigue",
+                description: "Suspenseful composition",
+                category: "dramatic",
+                driveId: "GOOGLE_DRIVE_FILE_ID",
+                featured: false
+            },
+            {
+                id: 5,
+                title: "Slowly Aching",
+                description: "Ambient emotional piece",
+                category: "ambient",
+                driveId: "GOOGLE_DRIVE_FILE_ID",
+                featured: false
+            }
+        ]
+    };
+
+    // Dynamic video data loaded from Google Drive
+    let videoData = [];
 
     // Your actual audio portfolio
     const audioData = [
@@ -138,16 +148,80 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     ];
 
-    // Function to load videos dynamically
-    function loadVideos() {
-        // Check if showcase_videos directory has files
-        checkForVideoFiles().then(hasVideos => {
-            if (hasVideos) {
-                renderVideoGallery(videoData);
-            } else {
-                renderVideoPlaceholder();
+    // Google Drive API integration
+    async function loadVideosFromGoogleDrive() {
+        console.log('🎬 Loading videos from Google Drive...');
+
+        try {
+            // First try to load from Google Drive API
+            if (GOOGLE_DRIVE_CONFIG.folderId && GOOGLE_DRIVE_CONFIG.apiKey &&
+                GOOGLE_DRIVE_CONFIG.folderId !== 'YOUR_GOOGLE_DRIVE_FOLDER_ID') {
+
+                const driveVideos = await fetchGoogleDriveVideos();
+                if (driveVideos && driveVideos.length > 0) {
+                    videoData = driveVideos;
+                    console.log(`✅ Loaded ${videoData.length} videos from Google Drive`);
+                    renderVideoGallery(videoData);
+                    return;
+                }
             }
-        });
+
+            // Fallback to manual configuration
+            console.log('📋 Using fallback video configuration');
+            videoData = GOOGLE_DRIVE_CONFIG.fallbackVideos;
+            renderVideoGallery(videoData);
+
+        } catch (error) {
+            console.error('❌ Error loading Google Drive videos:', error);
+            videoData = GOOGLE_DRIVE_CONFIG.fallbackVideos;
+            renderVideoGallery(videoData);
+        }
+    }
+
+    // Fetch videos from Google Drive API
+    async function fetchGoogleDriveVideos() {
+        const apiKey = GOOGLE_DRIVE_CONFIG.apiKey;
+        const folderId = GOOGLE_DRIVE_CONFIG.folderId;
+
+        const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType+contains+'video'&key=${apiKey}&fields=files(id,name,mimeType,webViewLink,thumbnailLink)`;
+
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`Google Drive API error: ${response.status}`);
+            }
+
+            const data = await response.json();
+
+            return data.files.map((file, index) => ({
+                id: index + 1,
+                title: file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
+                description: `Professional composition - ${file.name}`,
+                category: getCategoryFromFilename(file.name),
+                driveId: file.id,
+                thumbnailUrl: file.thumbnailLink,
+                featured: index === 0 // Make first video featured
+            }));
+
+        } catch (error) {
+            console.error('Google Drive API fetch failed:', error);
+            return null;
+        }
+    }
+
+    // Smart category detection from filename
+    function getCategoryFromFilename(filename) {
+        const name = filename.toLowerCase();
+        if (name.includes('cinematic') || name.includes('film') || name.includes('cologne')) return 'cinematic';
+        if (name.includes('dramatic') || name.includes('heartbreak') || name.includes('intrigue')) return 'dramatic';
+        if (name.includes('ambient') || name.includes('slow') || name.includes('aching')) return 'ambient';
+        if (name.includes('uplifting') || name.includes('happy')) return 'uplifting';
+        return 'cinematic'; // default category
+    }
+
+    // Function to load videos dynamically (updated for Google Drive)
+    function loadVideos() {
+        loadVideosFromGoogleDrive();
     }
 
     // Function to load audio dynamically
@@ -243,26 +317,65 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Render video gallery
+    // Enhanced Google Drive video gallery
     function renderVideoGallery(videos) {
         const videoGrid = document.querySelector('.video-grid');
         videoGrid.innerHTML = '';
 
+        if (!videos || videos.length === 0) {
+            renderVideoPlaceholder();
+            return;
+        }
+
         videos.forEach(video => {
             const videoItem = document.createElement('div');
             videoItem.className = `video-item ${video.category}`;
+
+            // Google Drive video embed
+            const embedUrl = video.driveId ?
+                `https://drive.google.com/file/d/${video.driveId}/preview` :
+                '#';
+
+            const directUrl = video.driveId ?
+                `https://drive.google.com/file/d/${video.driveId}/view` :
+                '#';
+
             videoItem.innerHTML = `
-                <video controls preload="metadata">
-                    <source src="${video.videoSrc}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
+                <div class="video-container">
+                    <iframe
+                        src="${embedUrl}"
+                        frameborder="0"
+                        allowfullscreen
+                        allow="autoplay"
+                        loading="lazy"
+                        onload="this.style.opacity=1; this.nextElementSibling.style.display='none';"
+                        onerror="this.style.display='none'; this.nextElementSibling.nextElementSibling.style.display='flex';"
+                        style="width:100%; height:300px; opacity:0; transition: opacity 0.3s ease;">
+                    </iframe>
+                    <div class="video-loading">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <span>Loading video from Google Drive...</span>
+                    </div>
+                    <div class="video-error" style="display: none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Video unavailable. <a href="${directUrl}" target="_blank" rel="noopener">Open in Google Drive</a></span>
+                    </div>
+                </div>
                 <div class="video-info">
                     <h4>${video.title}</h4>
                     <p>${video.description}</p>
+                    <div class="video-actions">
+                        <a href="${directUrl}" target="_blank" rel="noopener" class="video-link">
+                            <i class="fas fa-external-link-alt"></i> View in Google Drive
+                        </a>
+                    </div>
                 </div>
             `;
+
             videoGrid.appendChild(videoItem);
         });
+
+        console.log(`✅ Rendered ${videos.length} Google Drive videos`);
     }
 
     // Render placeholder when no videos are present
@@ -447,23 +560,97 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 5000);
     }
 
-    // Audio player enhancements
-    const audioElements = document.querySelectorAll('audio');
-    audioElements.forEach(audio => {
-        audio.addEventListener('loadstart', function () {
-            console.log('Loading audio:', this.src);
+    // Enhanced video element setup
+    function setupVideoElement(video, loadingDiv, errorDiv, videoData) {
+        let hasLoaded = false;
+
+        // Show loading initially
+        loadingDiv.style.display = 'flex';
+
+        video.addEventListener('loadstart', function () {
+            console.log('🎬 Loading video:', videoData.title, this.src);
+            loadingDiv.style.display = 'flex';
+            errorDiv.style.display = 'none';
         });
 
-        audio.addEventListener('error', function () {
-            console.log('Audio file not found:', this.src);
-            // Replace with placeholder or hide
-            this.style.display = 'none';
-            const placeholder = document.createElement('div');
-            placeholder.className = 'audio-placeholder';
-            placeholder.innerHTML = '<i class="fas fa-music"></i> Audio file coming soon';
-            this.parentNode.appendChild(placeholder);
+        video.addEventListener('canplaythrough', function () {
+            console.log('✅ Video ready to play:', videoData.title);
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'none';
+            hasLoaded = true;
+
+            // Enable autoplay on user interaction
+            this.addEventListener('click', function () {
+                if (this.paused) {
+                    this.play().catch(e => console.log('Play failed:', e));
+                }
+            });
         });
-    });
+
+        video.addEventListener('loadedmetadata', function () {
+            console.log('📊 Video metadata loaded:', videoData.title, `Duration: ${this.duration}s`);
+            loadingDiv.style.display = 'none';
+        });
+
+        video.addEventListener('error', function (e) {
+            console.error('❌ Video error for', videoData.title, ':', e);
+            console.error('Error details:', this.error);
+            loadingDiv.style.display = 'none';
+            errorDiv.style.display = 'flex';
+
+            // Try to diagnose the issue
+            fetch(this.src)
+                .then(response => {
+                    console.log('📁 Video file response:', response.status, response.headers.get('content-type'));
+                    if (!response.ok) {
+                        console.error('🚫 Video file not accessible:', response.status);
+                    }
+                })
+                .catch(err => {
+                    console.error('🌐 Network error accessing video:', err);
+                });
+        });
+
+        video.addEventListener('stalled', function () {
+            console.warn('⏳ Video stalled:', videoData.title);
+        });
+
+        video.addEventListener('waiting', function () {
+            console.warn('⌛ Video waiting for data:', videoData.title);
+        });
+
+        // Force load attempt
+        setTimeout(() => {
+            if (!hasLoaded) {
+                console.log('🔄 Forcing video load attempt:', videoData.title);
+                video.load();
+            }
+        }, 2000);
+    }
+
+    // Audio player enhancements
+    setTimeout(() => {
+        const audioElements = document.querySelectorAll('audio');
+        audioElements.forEach(audio => {
+            audio.addEventListener('loadstart', function () {
+                console.log('🎵 Loading audio:', this.src);
+            });
+
+            audio.addEventListener('error', function () {
+                console.log('❌ Audio file not found:', this.src);
+                // Replace with placeholder or hide
+                this.style.display = 'none';
+                const placeholder = document.createElement('div');
+                placeholder.className = 'audio-placeholder';
+                placeholder.innerHTML = '<i class="fas fa-music"></i> Audio file coming soon';
+                this.parentNode.appendChild(placeholder);
+            });
+
+            audio.addEventListener('canplaythrough', function () {
+                console.log('✅ Audio ready to play:', this.src);
+            });
+        });
+    }, 1000);
 
     // Intersection Observer for animations
     const observerOptions = {
@@ -633,6 +820,96 @@ style.textContent = `
         border: 1px solid rgba(220, 53, 69, 0.3);
     }
     
+    .video-container {
+        position: relative;
+        width: 100%;
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    
+    .video-container iframe {
+        width: 100%;
+        height: 300px;
+        border-radius: 8px;
+        background: #000;
+        display: block;
+    }
+    
+    .video-container video {
+        width: 100%;
+        height: auto;
+        display: block;
+        background: #000;
+    }
+    
+    .video-actions {
+        margin-top: 0.75rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .video-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--gold-color);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 6px;
+        background: rgba(212, 175, 55, 0.1);
+    }
+    
+    .video-link:hover {
+        color: #fff;
+        background: var(--gold-color);
+        border-color: var(--gold-color);
+        transform: translateY(-2px);
+    }
+    
+    .video-link i {
+        font-size: 0.8rem;
+    }
+    
+    .video-loading, .video-error {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        text-align: center;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.7);
+        border-radius: 8px;
+        backdrop-filter: blur(4px);
+        z-index: 10;
+    }
+    
+    .video-loading i {
+        font-size: 1.5rem;
+        color: var(--gold-color);
+        animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    .video-error i {
+        font-size: 1.5rem;
+        color: #ff6b6b;
+    }
+    
+    .video-error a {
+        color: var(--gold-color);
+        text-decoration: underline;
+    }
+    
     .audio-placeholder {
         display: flex;
         align-items: center;
@@ -647,6 +924,11 @@ style.textContent = `
     .audio-placeholder i {
         margin-right: 0.5rem;
         color: var(--gold-color);
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
     }
     
     .video-controls {
