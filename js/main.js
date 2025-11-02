@@ -76,59 +76,111 @@ document.addEventListener('DOMContentLoaded', function () {
     const videoGallery = document.getElementById('video-gallery');
     const filterButtons = document.querySelectorAll('.filter-btn');
 
-    // Google Drive Configuration
+    // Google Drive API Configuration
     const GOOGLE_DRIVE_CONFIG = {
-        // Your Google Drive folder ID (extracted from the shared link)
-        folderId: '1w2Uao5tH7pOM_mQkFHaMRjM-xqfz3WSI',
-        apiKey: 'YOUR_GOOGLE_API_KEY', // Get from Google Cloud Console (steps provided below)
-
-        // Manual fallback video data (will be used until API key is configured)
-        fallbackVideos: [
-            {
-                id: 1,
-                title: "Cologne Ad",
-                description: "Professional commercial music composition for advertising",
-                category: "cinematic",
-                driveId: "GOOGLE_DRIVE_FILE_ID", // Replace with actual Google Drive file ID
-                featured: true
-            },
-            {
-                id: 2,
-                title: "Fear Rain - Studio Ghibli Theme",
-                description: "Cinematic orchestral theme with Studio Ghibli inspiration",
-                category: "cinematic",
-                driveId: "GOOGLE_DRIVE_FILE_ID",
-                featured: false
-            },
-            {
-                id: 3,
-                title: "Heartbreak",
-                description: "Emotional dramatic composition",
-                category: "dramatic",
-                driveId: "GOOGLE_DRIVE_FILE_ID",
-                featured: false
-            },
-            {
-                id: 4,
-                title: "Intrigue",
-                description: "Suspenseful composition",
-                category: "dramatic",
-                driveId: "GOOGLE_DRIVE_FILE_ID",
-                featured: false
-            },
-            {
-                id: 5,
-                title: "Slowly Aching",
-                description: "Ambient emotional piece",
-                category: "ambient",
-                driveId: "GOOGLE_DRIVE_FILE_ID",
-                featured: false
-            }
-        ]
+        API_KEY: 'YOUR_API_KEY_HERE', // Replace with your Google API key
+        FOLDER_ID: '1w2Uao5tH7pOM_mQkFHaMRjM-xqfz3WSI',
+        DISCOVERY_URL: 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest'
     };
 
-    // Dynamic video data loaded from Google Drive
-    let videoData = [];
+    // Video metadata mapping for better descriptions and categories
+    const videoMetadata = {
+        'Cologne Ad': {
+            description: 'Professional commercial music composition for advertising',
+            category: 'cinematic',
+            featured: true
+        },
+        'Fear Rain - Studio Ghibli Theme': {
+            description: 'Cinematic orchestral theme with Studio Ghibli inspiration',
+            category: 'cinematic',
+            featured: false
+        },
+        'fear-rain-studio-ghibli': {
+            title: 'Fear Rain - Studio Ghibli Theme',
+            description: 'Cinematic orchestral theme with Studio Ghibli inspiration',
+            category: 'cinematic',
+            featured: false
+        },
+        'Heartbreak': {
+            description: 'Emotional dramatic composition',
+            category: 'dramatic',
+            featured: false
+        },
+        'heartbreak': {
+            title: 'Heartbreak',
+            description: 'Emotional dramatic composition',
+            category: 'dramatic',
+            featured: false
+        },
+        'Intrigue': {
+            description: 'Suspenseful composition',
+            category: 'dramatic',
+            featured: false
+        },
+        'intrigue': {
+            title: 'Intrigue',
+            description: 'Suspenseful composition',
+            category: 'dramatic',
+            featured: false
+        },
+        'Slowly Aching': {
+            description: 'Ambient emotional piece',
+            category: 'ambient',
+            featured: false
+        },
+        'slowly aching': {
+            title: 'Slowly Aching',
+            description: 'Ambient emotional piece',
+            category: 'ambient',
+            featured: false
+        }
+    };
+
+    // Video data with embedded Google Drive videos (Slowly Aching removed - invalid format)
+    const fallbackVideoData = [
+        {
+            id: 1,
+            title: "Cologne Ad",
+            description: "Professional commercial music composition for advertising",
+            category: "cinematic",
+            featured: true,
+            googleDriveUrl: "https://drive.google.com/file/d/11uyjlG92LIIDMgugZ3SRsL5IoW7pftBb/view?usp=sharing",
+            embedUrl: "https://drive.google.com/file/d/11uyjlG92LIIDMgugZ3SRsL5IoW7pftBb/preview",
+            duration: "2:30"
+        },
+        {
+            id: 2,
+            title: "Fear Rain - Studio Ghibli Theme",
+            description: "Cinematic orchestral theme with Studio Ghibli inspiration",
+            category: "cinematic",
+            featured: false,
+            googleDriveUrl: "https://drive.google.com/file/d/1AT2O-QkWubsZvNvqrv6Qcf0IuAW-2EDZ/view?usp=sharing",
+            embedUrl: "https://drive.google.com/file/d/1AT2O-QkWubsZvNvqrv6Qcf0IuAW-2EDZ/preview",
+            duration: "3:45"
+        },
+        {
+            id: 3,
+            title: "Heartbreak",
+            description: "Emotional dramatic composition",
+            category: "dramatic",
+            featured: false,
+            googleDriveUrl: "https://drive.google.com/file/d/1j0Fyo39n1cBeuZXXbfPQAZx2N3-DDYzs/view?usp=sharing",
+            embedUrl: "https://drive.google.com/file/d/1j0Fyo39n1cBeuZXXbfPQAZx2N3-DDYzs/preview",
+            duration: "4:12"
+        },
+        {
+            id: 4,
+            title: "Intrigue",
+            description: "Suspenseful composition",
+            category: "dramatic",
+            featured: false,
+            googleDriveUrl: "https://drive.google.com/file/d/11oFFn5CiqGIb0lqfLYdEobYr_kKr3-jS/view?usp=sharing",
+            embedUrl: "https://drive.google.com/file/d/11oFFn5CiqGIb0lqfLYdEobYr_kKr3-jS/preview",
+            duration: "2:58"
+        }
+    ];
+
+    let currentVideoData = [];
 
     // Your actual audio portfolio
     const audioData = [
@@ -148,80 +200,180 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     ];
 
-    // Google Drive API integration
-    async function loadVideosFromGoogleDrive() {
-        console.log('🎬 Loading videos from Google Drive...');
-
+    // Google Drive API Functions
+    async function loadGoogleDriveAPI() {
         try {
-            // First try to load from Google Drive API
-            if (GOOGLE_DRIVE_CONFIG.folderId && GOOGLE_DRIVE_CONFIG.apiKey &&
-                GOOGLE_DRIVE_CONFIG.folderId !== 'YOUR_GOOGLE_DRIVE_FOLDER_ID') {
+            console.log('🔑 Loading Google Drive API...');
 
-                const driveVideos = await fetchGoogleDriveVideos();
-                if (driveVideos && driveVideos.length > 0) {
-                    videoData = driveVideos;
-                    console.log(`✅ Loaded ${videoData.length} videos from Google Drive`);
-                    renderVideoGallery(videoData);
-                    return;
-                }
+            // Check if we have an API key configured
+            if (GOOGLE_DRIVE_CONFIG.API_KEY === 'YOUR_API_KEY_HERE') {
+                console.log('⚠️ Google Drive API key not configured, using fallback data');
+                return false;
             }
 
-            // Fallback to manual configuration
-            console.log('📋 Using fallback video configuration');
-            videoData = GOOGLE_DRIVE_CONFIG.fallbackVideos;
-            renderVideoGallery(videoData);
+            // Load the Google API client
+            await loadScript('https://apis.google.com/js/api.js');
+            await new Promise((resolve) => gapi.load('client', resolve));
 
+            // Initialize the client
+            await gapi.client.init({
+                apiKey: GOOGLE_DRIVE_CONFIG.API_KEY,
+                discoveryDocs: [GOOGLE_DRIVE_CONFIG.DISCOVERY_URL]
+            });
+
+            console.log('✅ Google Drive API loaded successfully');
+            return true;
         } catch (error) {
-            console.error('❌ Error loading Google Drive videos:', error);
-            videoData = GOOGLE_DRIVE_CONFIG.fallbackVideos;
-            renderVideoGallery(videoData);
+            console.error('❌ Failed to load Google Drive API:', error);
+            return false;
         }
     }
 
-    // Fetch videos from Google Drive API
-    async function fetchGoogleDriveVideos() {
-        const apiKey = GOOGLE_DRIVE_CONFIG.apiKey;
-        const folderId = GOOGLE_DRIVE_CONFIG.folderId;
-
-        const url = `https://www.googleapis.com/drive/v3/files?q='${folderId}'+in+parents+and+mimeType+contains+'video'&key=${apiKey}&fields=files(id,name,mimeType,webViewLink,thumbnailLink)`;
-
+    async function fetchVideosFromGoogleDrive() {
         try {
-            const response = await fetch(url);
-            if (!response.ok) {
-                throw new Error(`Google Drive API error: ${response.status}`);
-            }
+            console.log('📁 Fetching videos from Google Drive folder...');
 
-            const data = await response.json();
+            const response = await gapi.client.drive.files.list({
+                q: `'${GOOGLE_DRIVE_CONFIG.FOLDER_ID}' in parents and mimeType contains 'video/'`,
+                fields: 'files(id, name, mimeType, size, createdTime, webViewLink, webContentLink)',
+                orderBy: 'name'
+            });
 
-            return data.files.map((file, index) => ({
-                id: index + 1,
-                title: file.name.replace(/\.[^/.]+$/, ""), // Remove file extension
-                description: `Professional composition - ${file.name}`,
-                category: getCategoryFromFilename(file.name),
-                driveId: file.id,
-                thumbnailUrl: file.thumbnailLink,
-                featured: index === 0 // Make first video featured
-            }));
+            const files = response.result.files;
+            console.log(`📹 Found ${files.length} video files in Google Drive`);
+
+            // Process files into our video data format
+            const videoData = files.map((file, index) => {
+                const fileName = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+                const metadata = findVideoMetadata(fileName, file.name);
+
+                return {
+                    id: index + 1,
+                    title: metadata.title || beautifyFileName(fileName),
+                    description: metadata.description || `Professional music composition - ${fileName}`,
+                    category: metadata.category || categorizeVideo(fileName),
+                    featured: metadata.featured || false,
+                    googleDriveUrl: file.webViewLink,
+                    downloadUrl: file.webContentLink,
+                    fileId: file.id,
+                    mimeType: file.mimeType,
+                    size: file.size,
+                    duration: "Unknown", // Would need video processing to get actual duration
+                    createdTime: file.createdTime
+                };
+            });
+
+            console.log('✅ Successfully processed video data from Google Drive');
+            return videoData;
 
         } catch (error) {
-            console.error('Google Drive API fetch failed:', error);
+            console.error('❌ Failed to fetch videos from Google Drive:', error);
             return null;
         }
     }
 
-    // Smart category detection from filename
-    function getCategoryFromFilename(filename) {
-        const name = filename.toLowerCase();
-        if (name.includes('cinematic') || name.includes('film') || name.includes('cologne')) return 'cinematic';
-        if (name.includes('dramatic') || name.includes('heartbreak') || name.includes('intrigue')) return 'dramatic';
-        if (name.includes('ambient') || name.includes('slow') || name.includes('aching')) return 'ambient';
-        if (name.includes('uplifting') || name.includes('happy')) return 'uplifting';
-        return 'cinematic'; // default category
+    function findVideoMetadata(fileName, fullFileName) {
+        // Try exact match first
+        if (videoMetadata[fileName]) {
+            return videoMetadata[fileName];
+        }
+
+        // Try full filename match
+        if (videoMetadata[fullFileName]) {
+            return videoMetadata[fullFileName];
+        }
+
+        // Try lowercase match
+        const lowerFileName = fileName.toLowerCase();
+        if (videoMetadata[lowerFileName]) {
+            return videoMetadata[lowerFileName];
+        }
+
+        // Try partial matches
+        for (const key in videoMetadata) {
+            if (fileName.toLowerCase().includes(key.toLowerCase()) ||
+                key.toLowerCase().includes(fileName.toLowerCase())) {
+                return videoMetadata[key];
+            }
+        }
+
+        return {};
     }
 
-    // Function to load videos dynamically (updated for Google Drive)
-    function loadVideos() {
-        loadVideosFromGoogleDrive();
+    function beautifyFileName(fileName) {
+        return fileName
+            .replace(/[-_]/g, ' ')
+            .replace(/\b\w/g, l => l.toUpperCase())
+            .trim();
+    }
+
+    function categorizeVideo(fileName) {
+        const name = fileName.toLowerCase();
+
+        if (name.includes('ambient') || name.includes('aching') || name.includes('slow')) {
+            return 'ambient';
+        }
+        if (name.includes('dramatic') || name.includes('heart') || name.includes('intrigue') || name.includes('suspense')) {
+            return 'dramatic';
+        }
+        if (name.includes('uplifting') || name.includes('happy') || name.includes('joy')) {
+            return 'uplifting';
+        }
+
+        return 'cinematic'; // Default category
+    }
+
+    function loadScript(src) {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) {
+                resolve();
+                return;
+            }
+
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    // Simple video loading function - no API required
+    async function loadVideos() {
+        console.log('🎬 Loading video showcase...');
+
+        // Check if individual links are configured
+        const hasIndividualLinks = fallbackVideoData.every(video =>
+            video.googleDriveUrl &&
+            !video.googleDriveUrl.includes('REPLACE_WITH_') &&
+            !video.googleDriveUrl.includes('folders/')
+        );
+
+        if (hasIndividualLinks) {
+            console.log('✅ Using individual Google Drive video links');
+        } else {
+            console.log('📄 Using placeholder links - replace with individual video links for best experience');
+        }
+
+        currentVideoData = fallbackVideoData;
+        renderVideoGallery(currentVideoData);
+
+        // Optional: Try Google Drive API if configured
+        if (GOOGLE_DRIVE_CONFIG.API_KEY !== 'YOUR_API_KEY_HERE') {
+            try {
+                const apiLoaded = await loadGoogleDriveAPI();
+                if (apiLoaded) {
+                    const driveVideos = await fetchVideosFromGoogleDrive();
+                    if (driveVideos && driveVideos.length > 0) {
+                        console.log('🚀 Enhanced with Google Drive API data');
+                        currentVideoData = driveVideos;
+                        renderVideoGallery(currentVideoData);
+                    }
+                }
+            } catch (error) {
+                console.log('ℹ️ Google Drive API not available, using manual links');
+            }
+        }
     }
 
     // Function to load audio dynamically
@@ -317,7 +469,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Enhanced Google Drive video gallery
+    // Professional video gallery with embedded Google Drive videos
     function renderVideoGallery(videos) {
         const videoGrid = document.querySelector('.video-grid');
         videoGrid.innerHTML = '';
@@ -331,43 +483,50 @@ document.addEventListener('DOMContentLoaded', function () {
             const videoItem = document.createElement('div');
             videoItem.className = `video-item ${video.category}`;
 
-            // Google Drive video embed
-            const embedUrl = video.driveId ?
-                `https://drive.google.com/file/d/${video.driveId}/preview` :
-                '#';
+            // Use embed URL if available, otherwise fall back to regular URL
+            const embedUrl = video.embedUrl || video.googleDriveUrl;
+            const watchUrl = video.googleDriveUrl;
+            const driveUrl = video.downloadUrl || video.googleDriveUrl;
 
-            const directUrl = video.driveId ?
-                `https://drive.google.com/file/d/${video.driveId}/view` :
-                '#';
+            // Format file size if available
+            const fileSizeText = video.size ? ` • ${formatFileSize(parseInt(video.size))}` : '';
+
+            // Use created date or default duration
+            const durationText = video.duration !== 'Unknown' ? video.duration :
+                video.createdTime ? new Date(video.createdTime).toLocaleDateString() : '---';
 
             videoItem.innerHTML = `
-                <div class="video-container">
-                    <iframe
-                        src="${embedUrl}"
-                        frameborder="0"
-                        allowfullscreen
-                        allow="autoplay"
-                        loading="lazy"
-                        onload="this.style.opacity=1; this.nextElementSibling.style.display='none';"
-                        onerror="this.style.display='none'; this.nextElementSibling.nextElementSibling.style.display='flex';"
-                        style="width:100%; height:300px; opacity:0; transition: opacity 0.3s ease;">
-                    </iframe>
-                    <div class="video-loading">
-                        <i class="fas fa-spinner fa-spin"></i>
-                        <span>Loading video from Google Drive...</span>
+                <div class="video-card category-${video.category}">
+                    <div class="video-container" style="background: linear-gradient(135deg, ${getGradientForCategory(video.category)})">
+                        <iframe
+                            src="${embedUrl}"
+                            frameborder="0"
+                            allowfullscreen
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            class="video-iframe">
+                        </iframe>
+                        <div class="video-overlay">
+                            <div class="video-duration">${durationText}</div>
+                            <div class="video-category-badge category-badge-${video.category}">${video.category.toUpperCase()}</div>
+                            ${video.featured ? '<div class="featured-badge"><i class="fas fa-star"></i></div>' : ''}
+                        </div>
                     </div>
-                    <div class="video-error" style="display: none;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>Video unavailable. <a href="${directUrl}" target="_blank" rel="noopener">Open in Google Drive</a></span>
-                    </div>
-                </div>
-                <div class="video-info">
-                    <h4>${video.title}</h4>
-                    <p>${video.description}</p>
-                    <div class="video-actions">
-                        <a href="${directUrl}" target="_blank" rel="noopener" class="video-link">
-                            <i class="fas fa-external-link-alt"></i> View in Google Drive
-                        </a>
+                    <div class="video-info">
+                        <h4>${video.title}</h4>
+                        <p>${video.description}</p>
+                        <div class="video-meta">
+                            <small class="video-details">${video.mimeType ? video.mimeType.split('/')[1].toUpperCase() : 'VIDEO'}${fileSizeText}</small>
+                        </div>
+                        <div class="video-actions">
+                            <button class="video-link primary category-btn-${video.category}" onclick="toggleFullscreen(this)"
+                                    title="Toggle fullscreen">
+                                <i class="fas fa-expand"></i> Fullscreen
+                            </button>
+                            <a href="${watchUrl}" target="_blank" rel="noopener" class="video-link secondary category-link-${video.category}"
+                               title="Open in Google Drive">
+                                <i class="fab fa-google-drive"></i> Open in Drive
+                            </a>
+                        </div>
                     </div>
                 </div>
             `;
@@ -375,7 +534,74 @@ document.addEventListener('DOMContentLoaded', function () {
             videoGrid.appendChild(videoItem);
         });
 
-        console.log(`✅ Rendered ${videos.length} Google Drive videos`);
+        console.log(`✅ Rendered ${videos.length} embedded video players from ${videos.length > 0 && videos[0].fileId ? 'Google Drive API' : 'fallback data'}`);
+
+        // Update category filter buttons based on available categories
+        updateCategoryFilters(videos);
+    }
+
+    function getGradientForCategory(category) {
+        switch (category.toLowerCase()) {
+            case 'cinematic':
+                return '#667eea 0%, #764ba2 100%';
+            case 'dramatic':
+                return '#f093fb 0%, #f5576c 100%';
+            case 'ambient':
+                return '#4facfe 0%, #00f2fe 100%';
+            case 'uplifting':
+                return '#43e97b 0%, #38f9d7 100%';
+            default:
+                return '#667eea 0%, #764ba2 100%';
+        }
+    }
+
+    function updateCategoryFilters(videos) {
+        // Get unique categories from videos
+        const categories = [...new Set(videos.map(v => v.category))];
+        const filterContainer = document.querySelector('.video-filters');
+
+        if (!filterContainer) return;
+
+        // Keep "All Works" filter and add dynamic categories
+        const allButton = filterContainer.querySelector('[data-filter="all"]');
+        const existingButtons = [...filterContainer.querySelectorAll('.filter-btn:not([data-filter="all"])')];
+
+        // Remove old category buttons
+        existingButtons.forEach(btn => btn.remove());
+
+        // Add new category buttons
+        categories.forEach(category => {
+            if (!filterContainer.querySelector(`[data-filter="${category}"]`)) {
+                const button = document.createElement('button');
+                button.className = 'filter-btn';
+                button.setAttribute('data-filter', category);
+                button.textContent = category.charAt(0).toUpperCase() + category.slice(1);
+
+                // Add click handler
+                button.addEventListener('click', function () {
+                    filterVideos(category);
+
+                    // Update active button
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                });
+
+                filterContainer.appendChild(button);
+            }
+        });
+    }
+
+    function filterVideos(category) {
+        const videoItems = document.querySelectorAll('.video-item');
+
+        videoItems.forEach(item => {
+            if (category === 'all' || item.classList.contains(category)) {
+                item.style.display = 'block';
+                item.style.animation = 'fadeInUp 0.5s ease';
+            } else {
+                item.style.display = 'none';
+            }
+        });
     }
 
     // Render placeholder when no videos are present
@@ -743,14 +969,14 @@ function playVideo(button) {
 
 function toggleFullscreen(button) {
     const videoItem = button.closest('.video-item');
-    const video = videoItem.querySelector('video');
+    const iframe = videoItem.querySelector('iframe');
 
-    if (video.requestFullscreen) {
-        video.requestFullscreen();
-    } else if (video.webkitRequestFullscreen) {
-        video.webkitRequestFullscreen();
-    } else if (video.msRequestFullscreen) {
-        video.msRequestFullscreen();
+    if (iframe.requestFullscreen) {
+        iframe.requestFullscreen();
+    } else if (iframe.webkitRequestFullscreen) {
+        iframe.webkitRequestFullscreen();
+    } else if (iframe.msRequestFullscreen) {
+        iframe.msRequestFullscreen();
     }
 }
 
@@ -794,7 +1020,7 @@ function createVideoThumbnail(videoFile, callback) {
     video.src = URL.createObjectURL(videoFile);
 }
 
-// Add CSS for form messages
+// Add CSS for form messages and video cards
 const style = document.createElement('style');
 style.textContent = `
     .form-message {
@@ -836,6 +1062,24 @@ style.textContent = `
         display: block;
     }
     
+    .video-iframe {
+        width: 100%;
+        height: 300px;
+        border: none;
+        border-radius: 8px;
+        background: #000;
+    }
+    
+    .video-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        pointer-events: none;
+        z-index: 1;
+    }
+    
     .video-container video {
         width: 100%;
         height: auto;
@@ -873,6 +1117,130 @@ style.textContent = `
     
     .video-link i {
         font-size: 0.8rem;
+    }
+    
+    .video-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        cursor: pointer;
+    }
+    
+    .video-card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--gold-color);
+    }
+    
+    .video-thumbnail {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+    }
+    
+    .thumbnail-background {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+    
+    .play-overlay {
+        width: 60px;
+        height: 60px;
+        background: rgba(0, 0, 0, 0.8);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--gold-color);
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+    }
+    
+    .video-card:hover .play-overlay {
+        background: var(--gold-color);
+        color: #000;
+        transform: scale(1.1);
+    }
+    
+    .video-duration {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+    
+    .video-category-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: var(--gold-color);
+        color: #000;
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .featured-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #ff6b35;
+        color: white;
+        padding: 6px 8px;
+        border-radius: 6px;
+        font-size: 0.8rem;
+        animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .video-meta {
+        margin: 0.5rem 0;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .video-details {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .video-link.primary {
+        color: #000 !important;
+        background: var(--gold-color) !important;
+        border: 1px solid var(--gold-color) !important;
+    }
+    
+    .video-link.primary:hover {
+        background: #fff !important;
+        transform: translateY(-2px);
+    }
+    
+    .video-link.secondary {
+        color: var(--gold-color) !important;
+        background: rgba(212, 175, 55, 0.1) !important;
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+    }
+    
+    .video-link.secondary:hover {
+        background: rgba(212, 175, 55, 0.2) !important;
+        border-color: var(--gold-color) !important;
+        transform: translateY(-2px);
     }
     
     .video-loading, .video-error {
@@ -987,6 +1355,115 @@ style.textContent = `
             opacity: 1;
             transform: translateY(0);
         }
+    }
+    
+    /* Enhanced Category-Based Styling */
+    .category-cinematic {
+        border: 2px solid rgba(102, 126, 234, 0.3);
+    }
+    
+    .category-cinematic:hover {
+        border-color: rgba(102, 126, 234, 0.8);
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .category-dramatic {
+        border: 2px solid rgba(240, 147, 251, 0.3);
+    }
+    
+    .category-dramatic:hover {
+        border-color: rgba(240, 147, 251, 0.8);
+        box-shadow: 0 0 20px rgba(240, 147, 251, 0.4);
+    }
+    
+    .category-ambient {
+        border: 2px solid rgba(79, 172, 254, 0.3);
+    }
+    
+    .category-ambient:hover {
+        border-color: rgba(79, 172, 254, 0.8);
+        box-shadow: 0 0 20px rgba(79, 172, 254, 0.4);
+    }
+    
+    /* Category-Specific Badge Colors */
+    .category-badge-cinematic {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+    }
+    
+    .category-badge-dramatic {
+        background: linear-gradient(45deg, #f093fb, #f5576c);
+        color: white;
+    }
+    
+    .category-badge-ambient {
+        background: linear-gradient(45deg, #4facfe, #00f2fe);
+        color: white;
+    }
+    
+    /* Category-Specific Button Colors */
+    .category-btn-cinematic {
+        background: linear-gradient(45deg, #667eea, #764ba2) !important;
+        border: none;
+        color: white !important;
+    }
+    
+    .category-btn-cinematic:hover {
+        background: linear-gradient(45deg, #764ba2, #667eea) !important;
+        transform: translateY(-2px);
+    }
+    
+    .category-btn-dramatic {
+        background: linear-gradient(45deg, #f093fb, #f5576c) !important;
+        border: none;
+        color: white !important;
+    }
+    
+    .category-btn-dramatic:hover {
+        background: linear-gradient(45deg, #f5576c, #f093fb) !important;
+        transform: translateY(-2px);
+    }
+    
+    .category-btn-ambient {
+        background: linear-gradient(45deg, #4facfe, #00f2fe) !important;
+        border: none;
+        color: white !important;
+    }
+    
+    .category-btn-ambient:hover {
+        background: linear-gradient(45deg, #00f2fe, #4facfe) !important;
+        transform: translateY(-2px);
+    }
+    
+    /* Category-Specific Secondary Links */
+    .category-link-cinematic {
+        border-color: rgba(102, 126, 234, 0.5) !important;
+        color: #667eea !important;
+    }
+    
+    .category-link-cinematic:hover {
+        background: rgba(102, 126, 234, 0.1) !important;
+        border-color: #667eea !important;
+    }
+    
+    .category-link-dramatic {
+        border-color: rgba(240, 147, 251, 0.5) !important;
+        color: #f093fb !important;
+    }
+    
+    .category-link-dramatic:hover {
+        background: rgba(240, 147, 251, 0.1) !important;
+        border-color: #f093fb !important;
+    }
+    
+    .category-link-ambient {
+        border-color: rgba(79, 172, 254, 0.5) !important;
+        color: #4facfe !important;
+    }
+    
+    .category-link-ambient:hover {
+        background: rgba(79, 172, 254, 0.1) !important;
+        border-color: #4facfe !important;
     }
 `;
 document.head.appendChild(style);
