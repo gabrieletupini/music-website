@@ -36,7 +36,7 @@ function toSeconds(time) {
 }
 
 // The preview currently playing, if any. It ends when it reaches its end
-// (completed) or when the listener pauses, seeks or starts another track.
+// (completed) or when the listener stops it or starts something else.
 let activePreview = null;
 
 function stopPreview(completed) {
@@ -48,10 +48,12 @@ function stopPreview(completed) {
     clearInterval(preview.timer);
     preview.audio.volume = 1;
     preview.row.classList.remove('is-previewing');
+    preview.row.style.removeProperty('--progress');
     preview.onFinish(completed);
 }
 
-// Plays [start, end] of a track with a short fade-in and a fade-out into the end.
+// Plays [start, end] of a track with a short fade-in and a fade-out into the end,
+// exposing progress through the row's --progress (0..1).
 // Volume is read-only on iOS, so there the preview simply stops at its end.
 function playPreview(row, audio, track, onFinish) {
     stopPreview(false);
@@ -73,19 +75,25 @@ function playPreview(row, audio, track, onFinish) {
             return;
         }
         audio.volume = Math.max(0, Math.min(1, (time - start) / PREVIEW_FADE_IN, (end - time) / PREVIEW_FADE_OUT));
+        row.style.setProperty('--progress', Math.max(0, (time - start) / (end - start)));
     }, 50);
 }
 
-// Listening page card: title, all-previews reel and numbered tracklist with players.
+// Listening page card: title, Preview / Full version toggle, all-previews reel
+// and numbered tracklist. Preview mode (the default) plays each track's preview
+// from its button; full mode shows the full-length players.
 function renderEp(ep) {
     const card = document.createElement('article');
-    card.className = 'ep-card';
+    card.className = 'ep-card mode-preview';
 
     const tracks = ep.tracks.map((track, index) => `
         <li class="ep-track">
             <span class="ep-track-number">${index + 1}</span>
             <span class="ep-track-title">${track.title}</span>
-            <button type="button" class="ep-preview">&#9654; Preview ${track.preview.start}&ndash;${track.preview.end}</button>
+            <button type="button" class="ep-preview">
+                <span class="ep-preview-play">&#9654; ${track.preview.start}&ndash;${track.preview.end}</span>
+                <span class="ep-preview-stop">&#9632; Stop</span>
+            </button>
             <audio controls preload="metadata">
                 <source src="${track.src}" type="audio/mpeg">
             </audio>
@@ -95,13 +103,24 @@ function renderEp(ep) {
     card.innerHTML = `
         <header class="ep-header">
             <h3 class="ep-title">${ep.title}</h3>
-            <button type="button" class="ep-reel">&#9654; Play all previews</button>
+            <div class="ep-controls">
+                <div class="ep-mode" role="group" aria-label="Listening mode">
+                    <button type="button" data-mode="preview" aria-pressed="true">Preview</button>
+                    <button type="button" data-mode="full" aria-pressed="false">Full version</button>
+                </div>
+                <button type="button" class="ep-reel">&#9654; Play all previews</button>
+            </div>
         </header>
         <ol class="ep-tracks">${tracks}</ol>
     `;
 
     const rows = [...card.querySelectorAll('.ep-track')];
     const audios = rows.map(row => row.querySelector('audio'));
+
+    function stopAll() {
+        stopPreview(false);
+        audios.forEach(audio => audio.pause());
+    }
 
     audios.forEach(audio => {
         // One track at a time.
@@ -129,7 +148,21 @@ function renderEp(ep) {
 
     rows.forEach((row, index) => {
         row.querySelector('.ep-preview').addEventListener('click', () => {
+            if (row.classList.contains('is-previewing')) {
+                stopAll();
+                return;
+            }
             playPreview(row, audios[index], ep.tracks[index], () => {});
+        });
+    });
+
+    const modeButtons = [...card.querySelectorAll('.ep-mode button')];
+    modeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            stopAll();
+            card.classList.toggle('mode-preview', button.dataset.mode === 'preview');
+            card.classList.toggle('mode-full', button.dataset.mode === 'full');
+            modeButtons.forEach(other => other.setAttribute('aria-pressed', String(other === button)));
         });
     });
 
@@ -157,11 +190,7 @@ function renderEp(ep) {
 
     reelButton.addEventListener('click', () => {
         if (reelPlaying) {
-            const audio = activePreview && activePreview.audio;
-            stopPreview(false);
-            if (audio) {
-                audio.pause();
-            }
+            stopAll();
             return;
         }
         setReel(true);
