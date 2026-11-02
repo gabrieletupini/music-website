@@ -595,152 +595,131 @@ p {
     font-weight: 500;
 }
 
-.audio-grid {
+/* EPs - one card per EP, tracklist with players */
+.ep-list {
     max-width: 1000px;
+    margin: 0 auto;
+    display: grid;
+    gap: 32px;
+}
+
+.ep-card {
+    background: var(--background-light);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    padding: 32px;
+}
+
+.ep-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-bottom: 20px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ep-title {
+    font-size: 1.6rem;
+    margin: 0;
+}
+
+.ep-share {
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    padding: 8px 14px;
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.ep-share:hover {
+    border-color: var(--accent-color);
+}
+
+.ep-tracks {
+    list-style: none;
+}
+
+.ep-track {
+    display: grid;
+    grid-template-columns: 32px minmax(120px, 1fr) minmax(200px, 2fr);
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.ep-track:last-child {
+    border-bottom: none;
+}
+
+.ep-track-number {
+    color: var(--text-light-gray);
+    font-variant-numeric: tabular-nums;
+}
+
+.ep-track-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--accent-color);
+}
+
+.ep-track audio {
+    width: 100%;
+}
+
+/* EP listening page (ep.html) - the link sent to listeners and libraries */
+.ep-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--background-section);
+}
+
+.ep-page-header,
+.ep-page-footer {
+    padding: 32px 0;
+    text-align: center;
+}
+
+.ep-page-artist {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.ep-page-role {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.8rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-gray);
+}
+
+.ep-page-main {
+    flex: 1;
+}
+
+.ep-page-main .ep-card {
+    max-width: 800px;
     margin: 0 auto;
 }
 
-/* Featured Audio Item - Prominent Display */
-.featured-audio-item {
-    background: var(--background-light);
-    border-radius: var(--border-radius);
-    box-shadow: var(--shadow-medium);
-    margin-bottom: 40px;
-    overflow: hidden;
+.ep-page-footer a {
+    color: var(--text-dark);
 }
 
-.featured-audio-content {
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 30px;
-    align-items: center;
-    padding: 30px;
-}
-
-.featured-audio-image {
-    position: relative;
-    border-radius: var(--border-radius);
-    overflow: hidden;
-}
-
-.featured-audio-image img {
-    width: 100%;
-    height: 200px;
-    object-fit: cover;
-    border-radius: var(--border-radius);
-}
-
-
-.featured-audio-info h3 {
-    color: var(--accent-color);
-    font-size: 1.8rem;
-    margin-bottom: 12px;
-    font-family: 'Playfair Display', serif;
-}
-
-.featured-audio-info p {
-    color: var(--text-gray);
-    font-size: 1.1rem;
-    line-height: 1.6;
-    margin-bottom: 20px;
-}
-
-.featured-audio-info audio {
-    width: 100%;
-}
-
-/* Other Audio Items - Smaller */
-.other-audio-items {
-    display: grid;
-    gap: 16px;
-}
-
-.audio-item {
-    background: var(--background-light);
-    border-radius: var(--border-radius);
-    padding: 20px;
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    box-shadow: var(--shadow-light);
-}
-
-.small-audio-image {
-    flex-shrink: 0;
-}
-
-.small-audio-image img {
-    width: 60px;
-    height: 60px;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 2px solid var(--border-color);
-}
-
-.audio-info h4 {
-    color: var(--accent-color);
-    margin-bottom: 4px;
-    font-size: 1rem;
-}
-
-.audio-info p {
-    color: var(--text-gray);
-    font-size: 0.9rem;
-    margin: 0;
-}
-
-.audio-item audio {
-    flex: 1;
-    min-width: 200px;
-}
-
-.audio-placeholder-section {
+.ep-page-missing {
     text-align: center;
-    background: var(--background-light);
-    border-radius: var(--border-radius);
-    padding: 40px;
-    border: 2px dashed var(--border-color);
-}
-
-.audio-placeholder h4 {
-    color: var(--accent-color);
-    margin-bottom: 16px;
-    font-size: 1.2rem;
-}
-
-.audio-placeholder p {
     color: var(--text-gray);
-    margin-bottom: 24px;
-}
-
-.audio-instructions {
-    text-align: left;
-    background: var(--background-section);
-    padding: 20px;
-    border-radius: var(--border-radius);
-    margin-top: 20px;
-    display: inline-block;
-}
-
-.audio-instructions h5 {
-    color: var(--accent-color);
-    margin-bottom: 12px;
-    font-size: 1rem;
-}
-
-.audio-instructions ol {
-    color: var(--text-gray);
-    font-size: 0.9rem;
-    line-height: 1.6;
-    margin: 0;
-}
-
-.audio-instructions li {
-    margin-bottom: 8px;
-}
-
-.audio-instructions strong {
-    color: var(--accent-color);
 }
 
 /* Video Section Title */
@@ -1138,14 +1117,22 @@ p {
         gap: 40px;
     }
 
-    .audio-item {
-        flex-direction: column;
-        text-align: center;
-        gap: 16px;
+    .ep-card {
+        padding: 24px 20px;
     }
 
-    .audio-item audio {
-        width: 100%;
+    .ep-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ep-track {
+        grid-template-columns: 24px 1fr;
+        gap: 8px 12px;
+    }
+
+    .ep-track audio {
+        grid-column: 1 / -1;
     }
 
     .services-grid {

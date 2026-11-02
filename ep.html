@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gabriele Tupini - EP</title>
+    <meta name="robots" content="noindex">
+    <link rel="icon" type="image/jpeg" href="/images/portrait.jpeg">
+    <link rel="apple-touch-icon" href="/images/portrait.jpeg">
+    <meta name="theme-color" content="#1a1a1a">
+
+    <link rel="stylesheet" href="/css/style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<!-- Served for /ep/<slug> via _redirects; absolute asset paths keep it working at that depth. -->
+<body class="ep-page">
+    <header class="ep-page-header">
+        <a class="ep-page-artist" href="/">Gabriele Tupini</a>
+        <span class="ep-page-role">Music Composer</span>
+    </header>
+
+    <main class="ep-page-main">
+        <div class="container" id="ep"></div>
+    </main>
+
+    <footer class="ep-page-footer">
+        <a href="mailto:gabrieletupini@gmail.com">gabrieletupini@gmail.com</a>
+    </footer>
+
+    <script src="/js/eps.js"></script>
+    <script>
+        const slug = window.location.pathname.split('/').filter(Boolean).pop();
+        const ep = EPS.find(candidate => candidate.slug === slug);
+        const target = document.getElementById('ep');
+
+        if (ep) {
+            document.title = `${ep.title} - Gabriele Tupini`;
+            target.appendChild(renderEp(ep, { shareable: false }));
+        } else {
+            target.innerHTML = '<p class="ep-page-missing">This EP is not available. <a href="/">Back to the portfolio</a></p>';
+        }
+    </script>
+</body>
+
+</html>

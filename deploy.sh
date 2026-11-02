@@ -17,7 +17,7 @@ echo "--- staging"
 rm -rf "$STAGE"
 mkdir -p "$STAGE"
 # Only what the site actually serves.
-cp index.html "$STAGE/"
+cp index.html ep.html _redirects "$STAGE/"
 for dir in css js images audio; do
   [[ -d "$dir" ]] && cp -R "$dir" "$STAGE/"
 done

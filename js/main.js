@@ -182,24 +182,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let currentVideoData = [];
 
-    // Your actual audio portfolio
-    const audioData = [
-        {
-            id: 1,
-            title: "Trees",
-            description: "Featured atmospheric composition with natural elements",
-            audioSrc: "audio/Trees.mp3",
-            featured: true
-        },
-        {
-            id: 2,
-            title: "Monotony",
-            description: "Minimalist composition exploring repetitive themes",
-            audioSrc: "audio/Monotony.mp3",
-            featured: false
-        }
-    ];
-
     // Google Drive API Functions
     async function loadGoogleDriveAPI() {
         try {
@@ -376,89 +358,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Function to load audio dynamically
-    function loadAudio() {
-        if (audioData.length > 0) {
-            renderAudioGallery(audioData);
-        } else {
-            renderAudioPlaceholder();
-        }
-    }
-
-    // Render featured audio gallery
-    function renderAudioGallery(audios) {
-        const audioGrid = document.getElementById('audio-grid');
-        audioGrid.innerHTML = '';
-
-        const featuredAudio = audios.find(audio => audio.featured);
-        const otherAudios = audios.filter(audio => !audio.featured);
-
-        if (featuredAudio) {
-            const featuredItem = document.createElement('div');
-            featuredItem.className = 'featured-audio-item';
-            featuredItem.innerHTML = `
-                <div class="featured-audio-content">
-                    <div class="featured-audio-image">
-                        <img src="images/portrait.jpeg" alt="${featuredAudio.title}">
-                    </div>
-                    <div class="featured-audio-info">
-                        <h3>${featuredAudio.title}</h3>
-                        <p>${featuredAudio.description}</p>
-                        <audio controls preload="metadata">
-                            <source src="${featuredAudio.audioSrc}" type="audio/mpeg">
-                        </audio>
-                    </div>
-                </div>
-            `;
-            audioGrid.appendChild(featuredItem);
-        }
-
-        if (otherAudios.length > 0) {
-            const otherAudiosContainer = document.createElement('div');
-            otherAudiosContainer.className = 'other-audio-items';
-
-            otherAudios.forEach(audio => {
-                const audioItem = document.createElement('div');
-                audioItem.className = 'audio-item';
-                audioItem.innerHTML = `
-                    <div class="small-audio-image">
-                        <img src="images/portrait.jpeg" alt="${audio.title}">
-                    </div>
-                    <div class="audio-info">
-                        <h4>${audio.title}</h4>
-                        <p>${audio.description}</p>
-                    </div>
-                    <audio controls preload="metadata">
-                        <source src="${audio.audioSrc}" type="audio/mpeg">
-                    </audio>
-                `;
-                otherAudiosContainer.appendChild(audioItem);
-            });
-
-            audioGrid.appendChild(otherAudiosContainer);
-        }
-    }
-
-    // Render audio placeholder
-    function renderAudioPlaceholder() {
-        const audioGrid = document.getElementById('audio-grid');
-        audioGrid.innerHTML = `
-            <div class="audio-placeholder-section">
-                <div class="audio-placeholder">
-                    <i class="fas fa-music"></i>
-                    <h4>Audio Showcase Ready</h4>
-                    <p>Add your MP3 files to the <strong>audio</strong> folder to display them here</p>
-                    <div class="audio-instructions">
-                        <h5>How to add audio:</h5>
-                        <ol>
-                            <li>Add your MP3 files to the <strong>audio/</strong> folder</li>
-                            <li>Update the audioData array in main.js with your track info</li>
-                            <li>Refresh to see your audio players</li>
-                        </ol>
-                    </div>
-                </div>
-            </div>
-        `;
+    // Render the EP catalogue (js/eps.js)
+    function loadEps() {
+        const epList = document.getElementById('ep-list');
+        EPS.forEach(ep => epList.appendChild(renderEp(ep, { shareable: true })));
     }
 
     // Check for video files - we now have actual videos!
@@ -649,8 +552,8 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Initialize audio and video gallery
-    loadAudio();
+    // Initialize EPs and video gallery
+    loadEps();
     loadVideos();
 
     // Contact Form with EmailJS Integration
