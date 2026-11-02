@@ -11,13 +11,20 @@ const EPS = [
     }
 ];
 
-function epUrl(ep) {
-    return `${window.location.origin}/ep/${ep.slug}`;
+// Portfolio tile: square disc cover and title, opening the EP's listening page.
+function renderEpTile(ep) {
+    const tile = document.createElement('a');
+    tile.className = 'ep-tile';
+    tile.href = `/ep/${ep.slug}`;
+    tile.innerHTML = `
+        <div class="ep-cover"><div class="ep-disc"></div></div>
+        <h4 class="ep-tile-title">${ep.title}</h4>
+    `;
+    return tile;
 }
 
-// Builds an EP card: title, numbered tracklist with players and, when
-// shareable, a button copying the EP's listening-page link.
-function renderEp(ep, { shareable }) {
+// Listening page card: title and numbered tracklist with players.
+function renderEp(ep) {
     const card = document.createElement('article');
     card.className = 'ep-card';
 
@@ -34,24 +41,9 @@ function renderEp(ep, { shareable }) {
     card.innerHTML = `
         <header class="ep-header">
             <h3 class="ep-title">${ep.title}</h3>
-            ${shareable ? '<button type="button" class="ep-share"><i class="fas fa-link"></i> <span>Copy link</span></button>' : ''}
         </header>
         <ol class="ep-tracks">${tracks}</ol>
     `;
-
-    if (shareable) {
-        const button = card.querySelector('.ep-share');
-        const label = button.querySelector('span');
-        button.addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(epUrl(ep));
-                label.textContent = 'Link copied';
-            } catch (error) {
-                window.location.href = epUrl(ep);
-            }
-            setTimeout(() => { label.textContent = 'Copy link'; }, 2000);
-        });
-    }
 
     return card;
 }

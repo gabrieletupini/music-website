@@ -595,14 +595,61 @@ p {
     font-weight: 500;
 }
 
-/* EPs - one card per EP, tracklist with players */
+/* EPs - portfolio grid of square disc tiles, each opening its listening page */
 .ep-list {
     max-width: 1000px;
     margin: 0 auto;
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 240px));
+    justify-content: center;
     gap: 32px;
 }
 
+.ep-tile {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+}
+
+.ep-cover {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    transition: var(--transition);
+}
+
+.ep-tile:hover .ep-cover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-medium);
+}
+
+/* Generic vinyl: grooves, a pale centre label and the spindle hole */
+.ep-disc {
+    width: 78%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle, var(--primary-color) 0 3%, #e8e2d6 3.5% 26%, transparent 26.5%),
+        repeating-radial-gradient(circle, #111 0 1px, #1c1c1c 1px 3px);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 6px 16px rgba(0, 0, 0, 0.5);
+    transition: transform 0.6s ease;
+}
+
+.ep-tile:hover .ep-disc {
+    transform: rotate(40deg);
+}
+
+.ep-tile-title {
+    margin: 14px 0 0;
+    font-size: 1.1rem;
+    text-align: center;
+}
+
+/* EP listening card - title and tracklist with players */
 .ep-card {
     background: var(--background-light);
     border-radius: var(--border-radius);
@@ -611,10 +658,6 @@ p {
 }
 
 .ep-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
     padding-bottom: 20px;
     margin-bottom: 8px;
     border-bottom: 1px solid var(--border-color);
@@ -623,23 +666,6 @@ p {
 .ep-title {
     font-size: 1.6rem;
     margin: 0;
-}
-
-.ep-share {
-    flex-shrink: 0;
-    background: none;
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 8px 14px;
-    font: inherit;
-    font-size: 0.9rem;
-    color: var(--text-dark);
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.ep-share:hover {
-    border-color: var(--accent-color);
 }
 
 .ep-tracks {
@@ -1119,11 +1145,6 @@ p {
 
     .ep-card {
         padding: 24px 20px;
-    }
-
-    .ep-header {
-        flex-direction: column;
-        align-items: flex-start;
     }
 
     .ep-track {

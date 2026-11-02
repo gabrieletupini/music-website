@@ -39,7 +39,7 @@
 
         if (ep) {
             document.title = `${ep.title} - Gabriele Tupini`;
-            target.appendChild(renderEp(ep, { shareable: false }));
+            target.appendChild(renderEp(ep));
         } else {
             target.innerHTML = '<p class="ep-page-missing">This EP is not available. <a href="/">Back to the portfolio</a></p>';
         }

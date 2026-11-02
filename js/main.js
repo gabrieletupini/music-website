@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Render the EP catalogue (js/eps.js)
     function loadEps() {
         const epList = document.getElementById('ep-list');
-        EPS.forEach(ep => epList.appendChild(renderEp(ep, { shareable: true })));
+        EPS.forEach(ep => epList.appendChild(renderEpTile(ep)));
     }
 
     // Check for video files - we now have actual videos!
