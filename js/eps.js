@@ -6,7 +6,10 @@ const EPS = [
         title: 'Piano and Orchestra 1',
         tracks: [
             { title: 'Trees', src: '/audio/Trees.mp3' },
-            { title: 'Monotony', src: '/audio/Monotony.mp3' }
+            { title: 'Monotony', src: '/audio/Monotony.mp3' },
+            { title: 'Heartbreak', src: '/audio/Heartbreak.mp3' },
+            { title: 'Fear', src: '/audio/Fear.mp3' },
+            { title: 'Intrigue', src: '/audio/Intrigue.mp3' }
         ]
     }
 ];
