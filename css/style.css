@@ -658,6 +658,11 @@ p {
 }
 
 .ep-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
     padding-bottom: 20px;
     margin-bottom: 8px;
     border-bottom: 1px solid var(--border-color);
@@ -668,16 +673,57 @@ p {
     margin: 0;
 }
 
+.ep-reel,
+.ep-preview {
+    border-radius: var(--border-radius);
+    font: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--transition);
+}
+
+.ep-reel {
+    background: var(--accent-color);
+    color: var(--text-light);
+    border: 1px solid var(--accent-color);
+    padding: 10px 18px;
+    font-size: 0.95rem;
+}
+
+.ep-reel:hover {
+    background: var(--primary-color);
+}
+
+.ep-preview {
+    background: none;
+    color: var(--text-dark);
+    border: 1px solid var(--border-color);
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.ep-preview:hover,
+.is-previewing .ep-preview {
+    border-color: var(--accent-color);
+}
+
+.ep-track.is-previewing {
+    background: var(--background-section);
+}
+
 .ep-tracks {
     list-style: none;
 }
 
 .ep-track {
     display: grid;
-    grid-template-columns: 32px minmax(120px, 1fr) minmax(200px, 2fr);
+    grid-template-columns: 32px minmax(100px, 1fr) auto minmax(200px, 2fr);
     align-items: center;
     gap: 16px;
-    padding: 12px 0;
+    padding: 12px 8px;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
     border-bottom: 1px solid var(--border-color);
 }
 
@@ -1148,7 +1194,7 @@ p {
     }
 
     .ep-track {
-        grid-template-columns: 24px 1fr;
+        grid-template-columns: 24px 1fr auto;
         gap: 8px 12px;
     }
 
