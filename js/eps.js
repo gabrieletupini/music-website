@@ -12,6 +12,14 @@ const EPS = [
             { title: 'Fear', src: '/audio/Fear.mp3', preview: { start: '2:50', end: '3:50' } },
             { title: 'Intrigue', src: '/audio/Intrigue.mp3', preview: { start: '2:20', end: '4:50' } }
         ]
+    },
+    {
+        slug: 'piano-and-orchestra-2',
+        title: 'Piano and Orchestra 2',
+        tracks: [
+            { title: 'Sausalito', src: '/audio/Sausalito.mp3', preview: { start: '1:20', end: '2:20' } },
+            { title: 'Lovers by the Sea', src: '/audio/LoversByTheSea.mp3', preview: { start: '1:50', end: '2:50' } }
+        ]
     }
 ];
 
